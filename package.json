@@ -1,0 +1,32 @@
+{
+  "name": "ssb-exporter",
+  "version": "1.0.0",
+  "description": "A cli for exporting your scuttlebot history",
+  "main": "export-data.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arj03/ssb-exporter.git"
+  },
+  "keywords": [
+    "ssb",
+    "scuttlebot",
+    "exporter",
+    "cli"
+  ],
+  "author": "Anders Rune Jensen <arj03@protonmail.ch>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/arj03/ssb-exporter/issues"
+  },
+  "homepage": "https://github.com/arj03/ssb-exporter",
+  "dependencies": {
+    "minimist": "^1.2.0",
+    "pull-stream": "^2.28.4",
+    "scuttlebot": "~7.2.5",
+    "ssb-client": "^2.0.0",
+    "ssb-ref": "^2.2.1"
+  }
+}
