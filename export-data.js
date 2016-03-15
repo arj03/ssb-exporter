@@ -3,6 +3,7 @@
 var fs = require('fs');
 var pull = require('pull-stream');
 var toPull = require('stream-to-pull-stream');
+var sanitize = require("sanitize-filename");
 
 function ensureDirExists(exportDir, callback)
 {
@@ -35,7 +36,7 @@ function exportFeed(userId, exportDir, sbot) {
             log.forEach(function(msg) {
                 pull(
                     sbot.blobs.get(msg.dest),
-                    toPull.sink(fs.createWriteStream(exportDir + "/" + msg.dest))
+                    toPull.sink(fs.createWriteStream(exportDir + "/" + sanitize(msg.dest)))
                 );
             });
 

@@ -28,5 +28,6 @@
     "scuttlebot": "~7.2.5",
     "ssb-client": "^2.0.0",
     "ssb-ref": "^2.2.1"
+    "sanitize-filename": "^1.5.3"
   }
 }
