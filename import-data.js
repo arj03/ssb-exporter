@@ -3,6 +3,7 @@
 var fs = require('fs');
 var pull = require('pull-stream');
 var toPull = require('stream-to-pull-stream');
+var sanitize = require("sanitize-filename");
 
 function checkEnd(insertedMessages, sbot)
 {
@@ -27,12 +28,26 @@ function importFeed(userId, exportDir, sbot) {
             if (msg['value'].sequence > latestLocalSeq) {
                 console.log("new message with id: " + msg['value'].sequence);
                 insertedMessages.push(msg['value']);
-                // FIXME: blobs
+
                 sbot.add(msg['value'], function(err) {
                     if (err) throw err;
 
                     insertedMessages.pop();
                 });
+
+                // blobs
+                if (msg['value'].content.mentions)
+                {
+                    msg['value'].content.mentions.forEach(function(o) {
+                        var file = fs.readFileSync(exportDir + "/" + sanitize(o.link));
+                        insertedMessages.push("blob");
+                        sbot.blobs.add(file, function(err) {
+                            if (err) throw err;
+
+                            insertedMessages.pop();
+                        });
+                    });
+                }
             }
         });
 
