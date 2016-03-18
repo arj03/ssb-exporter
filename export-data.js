@@ -19,11 +19,14 @@ function ensureDirExists(exportDir, callback)
 
 function exportFeed(userId, exportDir, sbot) {
     // load data
-    pull(sbot.createUserStream({ id: userId }), pull.collect(function (err, log) {
-        if (err) throw err;
+    pull(
+        sbot.createUserStream({ id: userId }),
+        pull.collect(function (err, log) {
+            if (err) throw err;
 
-        fs.writeFile(exportDir + "/messages.txt", JSON.stringify(log));
-    }));
+            fs.writeFile(exportDir + "/messages.txt", JSON.stringify(log));
+        })
+    );
 
     var blobs, blobMessageMap = {};
     pull(
