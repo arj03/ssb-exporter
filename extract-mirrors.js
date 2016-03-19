@@ -3,71 +3,59 @@
 var pull = require('pull-stream');
 var toPull = require('stream-to-pull-stream');
 
-function checkEnd(runningStreams, sbot, callback)
+var friendsLeft = 0;
+var userMirrors = {};
+
+function friendDone(friendId, sbot, cb)
 {
-    setTimeout(function () {
-        if (runningStreams.length == 0) {
-            sbot.close();
-            console.log("done searching for mirrors");
-            callback();
-        } else {
-            console.log("not done yet, outstanding: " + runningStreams.length);
-            checkEnd(runningStreams, sbot, callback);
-        }
-    }, 200);
+    console.log("done checking friend: " + friendId);
+    friendsLeft -= 1;
+    if (friendsLeft == 0)
+    {
+        sbot.close();
+        console.log("done searching for mirrors");
+        cb();
+    }
 }
 
-function getFriends(sbot, callback)
+function getFriends(sbot, cb)
 {
-    var userMirrors = {};
-    var runningStreams = [];
-
     pull(
         sbot.friends.createFriendStream({meta: true, hops: 1}),
         pull.collect(function (err, log) {
             if (err) throw err;
 
-            runningStreams.push(1);
+            friendsLeft = log.filter(l => l.hops == 1).length;
 
             log.forEach(function(friend) {
                 if (friend.hops == 1) {
                     console.log("Checking friend: " + friend.id);
-                    runningStreams.push(friend.id);
+                    userMirrors[friend.id] = [];
                     pull(
                         sbot.createUserStream({ id: friend.id, keys: false }),
                         pull.collect(function (err, msgs) {
                             if (err) throw err;
 
-                            msgs.forEach(function(msg) {
-                                if (msg.content.type == "about") {
-                                    if (msg.content.mirror)
-                                    {
-                                        if (friend.id in userMirrors)
-                                            userMirrors[friend.id].push(msg.content.mirror);
-                                        else
-                                            userMirrors[friend.id] = [msg.content.mirror];
-                                    }
-                                }
+                            msgs.forEach(msg => {
+                                if (msg.content.type == "about" && msg.content.mirror)
+                                    userMirrors[friend.id].push(msg.content.mirror);
                             });
 
-                            runningStreams.pop();
+                            friendDone(friend.id, sbot, cb);
                         })
                     );
                 }
             });
-
-            runningStreams.pop();
         })
     );
-
-    checkEnd(runningStreams, sbot, function() { callback(userMirrors); });
 }
 
-require('ssb-client')(function (err, sbot) {
+require('ssb-client')((err, sbot) => {
     if (err) throw err;
 
-    getFriends(sbot, function(userMirrors) {
+    getFriends(sbot, () => {
         for (var friendId in userMirrors)
-             console.log("got mirrors", userMirrors[friendId], " for", friendId);
+            if (userMirrors[friendId].length > 0)
+                console.log("got mirrors", userMirrors[friendId], " for", friendId);
     });
 });
