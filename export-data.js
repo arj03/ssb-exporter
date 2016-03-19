@@ -4,6 +4,8 @@ var fs = require('fs');
 var pull = require('pull-stream');
 var toPull = require('stream-to-pull-stream');
 var sanitize = require("sanitize-filename");
+var mlib = require('ssb-msgs');
+var ref = require('ssb-ref');
 
 function ensureDirExists(exportDir, callback)
 {
@@ -17,34 +19,43 @@ function ensureDirExists(exportDir, callback)
         callback();
 }
 
+var blobQueue = [];
+
+function consumeBlobQueue(sbot, cb)
+{
+    if (blobQueue.length > 0) {
+        var link = blobQueue.pop();
+        console.log(link);
+        pull(
+            sbot.blobs.get(link),
+            toPull.sink(fs.createWriteStream(exportDir + "/" + sanitize(link)))
+        , function() { consumeBlobQueue(sbot, cb); }
+        );
+    } else
+        cb();
+}
+
+function queueBlobs(obj, rel) {
+    if (ref.type(obj.link) == 'blob')
+        blobQueue.push(obj.link);
+}
+
 function exportFeed(userId, exportDir, sbot) {
-    // load data
     pull(
         sbot.createUserStream({ id: userId }),
-        pull.collect(function (err, log) {
+        pull.collect((err, log) => {
             if (err) throw err;
 
-            fs.writeFile(exportDir + "/messages.txt", JSON.stringify(log));
-        })
-    );
-
-    var blobs, blobMessageMap = {};
-    pull(
-        // fetch messages by `userId` which link to a blob
-        sbot.links({ source: userId, dest: '&', values: true }),
-
-        pull.collect(function (err, log) {
-            if (err) throw err;
-
-            log.forEach(function(msg) {
-                pull(
-                    sbot.blobs.get(msg.dest),
-                    toPull.sink(fs.createWriteStream(exportDir + "/" + sanitize(msg.dest)))
-                );
+            log.forEach(msg => {
+                mlib.indexLinks(msg.value.content, (obj, rel) => queueBlobs(obj, rel));
             });
 
-            sbot.close();
-        }));
+            consumeBlobQueue(sbot, () => {
+                fs.writeFile(exportDir + "/messages.txt", JSON.stringify(log));
+                sbot.close();
+            });
+        })
+    );
 }
 
 var userId = process.argv[2];
@@ -55,7 +66,7 @@ if (!require('ssb-ref').isFeed(userId)) {
     process.exit(1);
 }
 
-require('ssb-client')(function (err, sbot) {
+require('ssb-client')((err, sbot) => {
     if (err) throw err;
 
     ensureDirExists(exportDir, function() { exportFeed(userId, exportDir, sbot); });
