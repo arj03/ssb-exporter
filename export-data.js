@@ -61,7 +61,7 @@ function exportFeed(userId, exportDir, sbot) {
 var userId = process.argv[2];
 var exportDir = process.argv[3];
 
-if (!require('ssb-ref').isFeed(userId)) {
+if (!ref.isFeed(userId)) {
     console.error('Usage: export-data.js --feedid {feedid} {exportDir}');
     process.exit(1);
 }
