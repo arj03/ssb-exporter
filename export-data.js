@@ -7,16 +7,16 @@ var sanitize = require("sanitize-filename");
 var mlib = require('ssb-msgs');
 var ref = require('ssb-ref');
 
-function ensureDirExists(exportDir, callback)
+function ensureDirExists(exportDir, cb)
 {
     if (!fs.existsSync(exportDir)) {
         fs.mkdir(exportDir, function(err){
             if (err) throw err;
 
-            callback();
+            cb();
         });
     } else
-        callback();
+        cb();
 }
 
 var blobQueue = [];

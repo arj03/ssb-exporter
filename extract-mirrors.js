@@ -4,7 +4,6 @@ var pull = require('pull-stream');
 var toPull = require('stream-to-pull-stream');
 
 var friendsLeft = 0;
-var userMirrors = {};
 
 function friendDone(friendId, sbot, cb)
 {
@@ -20,6 +19,8 @@ function friendDone(friendId, sbot, cb)
 
 function getFriends(sbot, cb)
 {
+    var userMirrors = {};
+
     pull(
         sbot.friends.createFriendStream({meta: true, hops: 1}),
         pull.collect(function (err, log) {
@@ -41,7 +42,7 @@ function getFriends(sbot, cb)
                                     userMirrors[friend.id].push(msg.content.mirror);
                             });
 
-                            friendDone(friend.id, sbot, cb);
+                            friendDone(friend.id, sbot, () => cb(userMirrors));
                         })
                     );
                 }
@@ -53,7 +54,7 @@ function getFriends(sbot, cb)
 require('ssb-client')((err, sbot) => {
     if (err) throw err;
 
-    getFriends(sbot, () => {
+    getFriends(sbot, userMirrors => {
         for (var friendId in userMirrors)
             if (userMirrors[friendId].length > 0)
                 console.log("got mirrors", userMirrors[friendId], " for", friendId);
