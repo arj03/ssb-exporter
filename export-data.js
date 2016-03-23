@@ -21,7 +21,7 @@ function ensureDirExists(exportDir, cb)
 
 var blobQueue = [];
 
-function consumeBlobQueue(sbot, cb)
+function consumeBlobQueue(sbot, exportDir, cb)
 {
     if (blobQueue.length > 0) {
         var link = blobQueue.pop();
@@ -29,7 +29,7 @@ function consumeBlobQueue(sbot, cb)
         pull(
             sbot.blobs.get(link),
             toPull.sink(fs.createWriteStream(exportDir + "/" + sanitize(link)))
-        , function() { consumeBlobQueue(sbot, cb); }
+        , function() { consumeBlobQueue(sbot, exportDir, cb); }
         );
     } else
         cb();
@@ -40,9 +40,9 @@ function queueBlobs(obj, rel) {
         blobQueue.push(obj.link);
 }
 
-function exportFeed(userId, exportDir, sbot) {
+function exportFeed(feedId, exportDir, sbot) {
     pull(
-        sbot.createUserStream({ id: userId }),
+        sbot.createUserStream({ id: feedId }),
         pull.collect((err, log) => {
             if (err) throw err;
 
@@ -50,7 +50,7 @@ function exportFeed(userId, exportDir, sbot) {
                 mlib.indexLinks(msg.value.content, (obj, rel) => queueBlobs(obj, rel));
             });
 
-            consumeBlobQueue(sbot, () => {
+            consumeBlobQueue(sbot, exportDir, () => {
                 fs.writeFile(exportDir + "/messages.txt", JSON.stringify(log));
                 sbot.close();
             });
@@ -58,16 +58,30 @@ function exportFeed(userId, exportDir, sbot) {
     );
 }
 
-var userId = process.argv[2];
-var exportDir = process.argv[3];
+var program = require('commander');
 
-if (!ref.isFeed(userId)) {
-    console.error('Usage: export-data.js --feedid {feedid} {exportDir}');
-    process.exit(1);
-}
+program
+  .option('-f, --feed-id [value]', 'Feed id to export')
+  .option('-e, --export-dir [value]', 'Dir to export feed to')
+  .parse(process.argv);
 
 require('ssb-client')((err, sbot) => {
     if (err) throw err;
 
-    ensureDirExists(exportDir, function() { exportFeed(userId, exportDir, sbot); });
+    sbot.whoami((err, info) => {
+        if (err) throw err;
+
+        var feedId = program.feedId || info.id;
+        var exportDir = program.exportDir || "";
+
+        if (!ref.isFeed(feedId)) {
+            console.error('Invalid public key: ' + feedId);
+            process.exit(1);
+        }
+
+        if (exportDir != "")
+            ensureDirExists(exportDir, function() { exportFeed(feedId, exportDir, sbot); });
+        else
+            exportFeed(feedId, exportDir, sbot);
+    });
 });
