@@ -9,8 +9,6 @@ var ref = require('ssb-ref');
 
 var sanitize = require("sanitize-filename");
 
-var userMirrors = { '@6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.ed25519': ['http://26thfiwfn3i3wnrf.onion/ssb/messages.txt'] };
-
 function writeFile(filename, res, cb)
 {
     var f = null;
@@ -77,31 +75,36 @@ function ensureDirExists(exportDir, cb)
         cb();
 }
 
-for (var user in userMirrors)
+function syncMirrors(userMirrors)
 {
-    userMirrors[user].forEach(mirror => {
-        ensureDirExists(sanitize(user), () => {
-            var options = url.parse(mirror);
+    for (var user in userMirrors)
+    {
+        userMirrors[user].forEach(mirror => {
+            ensureDirExists(sanitize(user), () => {
+                var options = url.parse(mirror);
 
-            var filename = sanitize(user) + "/" + path.basename(options.pathname);
+                var filename = sanitize(user) + "/" + path.basename(options.pathname);
 
-            var stats = null;
-            try {
-                stats = fs.statSync(filename);
-                options.headers = {'If-Modified-Since': stats.mtime.toUTCString() };
-            } catch(err) {
-                //console.log("stat error:" + filename + ", error:" + err);
-            }
+                var stats = null;
+                try {
+                    stats = fs.statSync(filename);
+                    options.headers = {'If-Modified-Since': stats.mtime.toUTCString() };
+                } catch(err) {
+                    //console.log("stat error:" + filename + ", error:" + err);
+                }
 
-            var userHttp = http;
+                var userHttp = http;
 
-            if (mirror.indexOf(".onion/") != -1)
-            {
-                options.socksPort = 9050; // tor default port
-                userHttp = shttp;
-            }
+                if (mirror.indexOf(".onion/") != -1)
+                {
+                    options.socksPort = 9050; // tor default port
+                    userHttp = shttp;
+                }
 
-            userHttp.get(options, res => writeFile(filename, res, () => syncBlobs(path.dirname(mirror), filename, user, userHttp)));
+                userHttp.get(options, res => writeFile(filename, res, () => syncBlobs(path.dirname(mirror), filename, user, userHttp)));
+            });
         });
-    });
+    }
 }
+
+syncMirrors({ '@6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.ed25519': ['http://26thfiwfn3i3wnrf.onion/ssb/messages.txt'] });
