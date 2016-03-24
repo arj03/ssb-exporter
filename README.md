@@ -11,4 +11,20 @@ Consists of the following files:
  - extract-mirrors.js: looks through your friends trying to find mirrors
  - sync-mirrors.js: Uses extract-mirrors to find mirrors, followed by syncing all feeds locally
 
+How do you publish a mirror?
+
+Currently work in progress, but the following command should publish a mirror to your feed:
+
+```
+sbot publish --type about --about '<YOUR-FEED-ID>' --mirror '<YOUR-MIRROR>'
+```
+
+I published my mirror using:
+
+```
+sbot publish --type about --about '@6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.ed25519' --mirror 'http://26thfiwfn3i3wnrf.onion/ssb/messages.txt'
+```
+
+Hopefully at some point this can be integrated into patchwork making it possible to add friends by a link to their mirror.
+
 Work in progress for [static feeds](https://github.com/ssbc/scuttlebot/issues/303)
