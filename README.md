@@ -25,6 +25,13 @@ I published my mirror using:
 sbot publish --type about --about '@6CAxOI3f+LUOVrbAl0IemqiS7ATpQvr9Mdw9LC4+Uv0=.ed25519' --mirror 'http://26thfiwfn3i3wnrf.onion/ssb/messages.txt'
 ```
 
+I use the following shell script to sync my feed to my mirror:
+
+```
+./export-data.js -e export
+rsync -av -e ssh export/ pi:export
+```
+
 Hopefully at some point this can be integrated into patchwork making it possible to add friends by a link to their mirror.
 
 Work in progress for [static feeds](https://github.com/ssbc/scuttlebot/issues/303)
