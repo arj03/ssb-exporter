@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+// FIXME: needs to be refactored once we have better test data
+
 var fs = require('fs');
 var pull = require('pull-stream');
 var toPull = require('stream-to-pull-stream');
