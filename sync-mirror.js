@@ -10,18 +10,14 @@ program
   .option('-e, --export-dir [value]', 'Dir to export mirror to')
   .parse(process.argv);
 
-require('ssb-client')((err, sbot) => {
-    if (err) throw err;
+if (program.mirror == "") {
+    console.error('No mirror specified. See --help');
+    process.exit(1);
+}
 
-    if (program.mirror == "") {
-        console.error('No mirror specified. See --help');
-        process.exit(1);
-    }
+var exportDir = program.exportDir || "";
 
-    var exportDir = program.exportDir || "";
-
-    if (exportDir != "")
-        common.ensureDirExists(exportDir, function() { lib.syncMirror(program.mirror, exportDir, sbot); });
-    else
-        lib.syncMirror(program.mirror, exportDir, sbot);
-});
+if (exportDir != "")
+    common.ensureDirExists(exportDir, function() { lib.syncMirror(program.mirror, exportDir); });
+else
+    lib.syncMirror(program.mirror, exportDir);
