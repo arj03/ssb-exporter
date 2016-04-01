@@ -1,6 +1,6 @@
 # ssb-exporter
 
-Feed and blob exporter/importer for [scuttlebutt](https://github.com/ssbc/scuttlebot)
+Feed and blob exporter/importer for [Scuttlebot](https://github.com/ssbc/scuttlebot)
 
 Exports your whole feed and corresponding blobs to a directory.
 Or import / sync a local folder of messages and blobs.
