@@ -1,6 +1,6 @@
 # ssb-exporter
 
-Feed and blob exporter/importer for [Scuttlebot](https://github.com/ssbc/scuttlebot)
+Feed and blob exporter/importer for [Scuttlebot](https://github.com/ssbc/scuttlebot). This can be used to create [sneakernets](https://en.wikipedia.org/wiki/Sneakernet).
 
 Exports your whole feed and corresponding blobs to a directory.
 Or import / sync a local folder of messages and blobs.
@@ -10,6 +10,8 @@ Consists of the following files:
  - import-data.js: syncs a feed with a local folder, importing missing messages and blobs
  - extract-mirrors.js: looks through your friends trying to find mirrors
  - sync-mirrors.js: Uses extract-mirrors to find mirrors, followed by syncing all feeds locally
+
+Furthermore this was a playground for alternative ways of mirroring content (static http) through bots.
 
 How do you publish a mirror?
 
@@ -32,6 +34,4 @@ I use the following shell script to sync my feed to my mirror:
 rsync -av -e ssh export/ pi:export
 ```
 
-Hopefully at some point this can be integrated into patchwork making it possible to add friends by a link to their mirror.
-
-Work in progress for [static feeds](https://github.com/ssbc/scuttlebot/issues/303)
+See also [static feeds](https://github.com/ssbc/scuttlebot/issues/303)
